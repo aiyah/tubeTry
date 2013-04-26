@@ -15,13 +15,13 @@ Example use:
 
 var tube1 = new Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, capTop, capBottom, material);
 
-rTop = radius top outer wall
-rBottom = radius bottom outer wall
-rTopIn = radius of inner top outer wall
-rBottomIn = radius of inner bottom wall
-height = height 
-rSegments = radius segments like in cylinder
-hSegments = height segments like in cylinder
-capTop = boolean indicator if should draw the top cap
-capBottom = boolean indicator if should draw the bottom cap
-material = THREE js material object
+rTop = radius top outer wall<br />
+rBottom = radius bottom outer wall<br />
+rTopIn = radius of inner top outer wall<br />
+rBottomIn = radius of inner bottom wall<br />
+height = height<br />
+rSegments = radius segments like in cylinder<br />
+hSegments = height segments like in cylinder<br />
+capTop = boolean indicator if should draw the top cap<br />
+capBottom = boolean indicator if should draw the bottom cap<br />
+material = THREE js material object<br />
