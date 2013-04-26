@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<head>
+
+<title>Tube Try</title>
+
+<script src="./../mrdoob-threejs/build/three.min.js"></script>
+<script src="./../cs291-master/lib/Coordinates.js"></script>
+<script src="./../cs291-master/lib/dat.gui.min.js"></script>
+<script src="./js/OrbitAndPanControlsYann.js"></script>
+<script src="./js/tubeTry.js"></script>
+
+</head>
+<body>
+<div id="container">
+<canvas>
+</canvas>
+</div>
+
+<script type="text/javascript">
+////////////////////////////////////////////////////////////////////////////////
+// Make a tube
+////////////////////////////////////////////////////////////////////////////////
+/*global THREE, Coordinates, document, window, dat*/
+
+var camera, scene, renderer;
+var cameraControls, effectController;
+var clock = new THREE.Clock();
+var gridX = true;
+var gridY = false;
+var gridZ = false;
+var axes = true;
+var ground = true;
+
+
+
+
+
+function fillScene() {
+	scene = new THREE.Scene();
+
+	// LIGHTS
+	var ambientLight = new THREE.AmbientLight( 0x222222 );
+	var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+	light.position.set( 100, 200, 100 );
+	var light2 = new THREE.DirectionalLight( 0xffffff, 0.4 );
+	light2.position.set( -300, 250, -200 );
+	scene.add(ambientLight);
+	scene.add(light);
+	//scene.add(light2);
+
+
+	//turn on double side while debugging
+
+	var mat1 = new THREE.MeshLambertMaterial({color: 0xffdd00,
+							side: THREE.FrontSide,
+							shading: THREE.FlatShading
+							});
+
+	var mat2 = new THREE.MeshLambertMaterial({color: 0x00dd22,
+							side: THREE.FrontSide});
+
+	var mat3 = new THREE.MeshLambertMaterial({color: 0x2222dd,
+							side: THREE.FrontSide,
+							shading: THREE.FlatShading
+							});
+
+
+	var tube1 = new Tube(30, 30, 10, 10, 40, 32, 10, true, true, mat1);
+	var tube2 = new Tube(30, 20, 10, 10, 40, 32, 10, true, true, mat2);
+	var tube3 = new Tube(5, 5, 1, 1, 10, 32, 10, true, true, mat3);
+
+	//var badTube1 = new Tube(5, 5, 10, 10, 10, 16, 10, true, true, mat3);
+	//var badTube2 = new Tube(5, 1, 5, 10, 10, 16, 10, true, true, mat3);
+
+	//tube1.rotation.x = -30 * Math.PI / 180;
+
+	tube2.scale.set = (1,2,1);
+	tube2.position.y = 40;
+	tube2.rotation.x = 30 * Math.PI / 180;
+	tube2.position.x = -100;
+
+	tube3.scale.set (5,3,3);
+	tube3.position.set(0, 80, 100);
+	tube3.rotation.x = 80 * Math.PI / 180 ;
+	tube3.rotation.z = 30 * Math.PI / 180 ;
+	
+	scene.add(tube1);
+	scene.add(tube2);
+	scene.add(tube3);
+	
+}
+
+
+function init() {
+	var canvasWidth = 846; 
+	var canvasHeight = 494;
+	var canvasRatio = canvasWidth / canvasHeight;
+
+	// RENDERER
+	renderer = new THREE.WebGLRenderer( { antialias: false } );
+	renderer.gammaInput = true;
+	renderer.gammaOutput = true;
+	renderer.setSize(canvasWidth, canvasHeight);
+	renderer.setClearColor( 0xAAAAAA, 1.0 );
+
+	// CAMERA
+	camera = new THREE.PerspectiveCamera( 38, canvasRatio, 1, 10000 );
+	// CONTROLS
+	cameraControls = new THREE.OrbitAndPanControls(camera, renderer.domElement);
+	camera.position.set(-200, 300, 200);
+	cameraControls.target.set(0,10,0);
+	fillScene();
+
+}
+
+function addToDOM() {
+    var container = document.getElementById('container');
+    var canvas = container.getElementsByTagName('canvas');
+    if (canvas.length>0) {
+        container.removeChild(canvas[0]);
+    }
+    container.appendChild( renderer.domElement );
+}
+
+function drawHelpers() {
+  if (ground) {
+		Coordinates.drawGround({size:10000});		
+	}
+	if (gridX) {
+		Coordinates.drawGrid({size:10000,scale:0.01});
+	}
+	if (gridY) {
+		Coordinates.drawGrid({size:10000,scale:0.01, orientation:"y"});
+	}
+	if (gridZ) {
+		Coordinates.drawGrid({size:10000,scale:0.01, orientation:"z"});	
+	}
+	if (axes) {
+		Coordinates.drawAllAxes({axisLength:200,axisRadius:1,axisTess:50});
+	}
+}
+
+function animate() {
+	window.requestAnimationFrame(animate);
+	render();
+}
+
+function render() {
+	var delta = clock.getDelta();
+	cameraControls.update(delta);
+
+	if ( effectController.newGridX !== gridX || effectController.newGridY !== gridY || effectController.newGridZ !== gridZ || effectController.newGround !== ground || effectController.newAxes !== axes)
+	{
+		gridX = effectController.newGridX;
+		gridY = effectController.newGridY;
+		gridZ = effectController.newGridZ;
+		ground = effectController.newGround;
+		axes = effectController.newAxes;
+
+		fillScene();
+	}
+
+	renderer.render(scene, camera);
+}
+
+
+
+function setupGui() {
+
+	effectController = {
+
+		newGridX: gridX,
+		newGridY: gridY,
+		newGridZ: gridZ,
+		newGround: ground,
+		newAxes: axes
+
+	};
+
+	var gui = new dat.GUI();
+	var h = gui.addFolder("Grid display");
+	h.add( effectController, "newGridX").name("Show XZ grid");
+	h.add( effectController, "newGridY" ).name("Show YZ grid");
+	h.add( effectController, "newGridZ" ).name("Show XY grid");
+	h.add( effectController, "newGround" ).name("Show ground");
+	h.add( effectController, "newAxes" ).name("Show axes");
+
+}
+
+
+// this is the main action sequence
+init();
+fillScene();
+drawHelpers();
+addToDOM();
+setupGui();
+animate();
+
+
+</script>
+
+
+
+
+</body>
+</html>
