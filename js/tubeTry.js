@@ -2,7 +2,6 @@
 
 function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, capTop, capBottom, material) {
 
-
 	this.rTop = rTop;
 	this.rBottom = rBottom;
 	this.height = height;
@@ -29,16 +28,16 @@ function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, ca
 	//innerWall.geometry.__dirtyNormals = true;
 	
 	
-	//so can see the inner wall 
-	innerWall.scale.y = -1;
+	//scale x or z not y since can have diff inner radius for top and bottom
+	innerWall.scale.x = -1;
 	
 
 	//so that inner wall is lit correctly
+	//if the normal for y is negated it looks a little too bright
 	for (var j = 0 ; j < innerWall.geometry.faces.length; j++) {
-		innerWall.geometry.faces[j].normal.negate();
-		//innerWall.geometry.faces[j].normal.x = innerWall.geometry.faces[j].normal.x  * -1;
+		innerWall.geometry.faces[j].normal.x = innerWall.geometry.faces[j].normal.x  * -1;
 		//innerWall.geometry.faces[j].normal.y = innerWall.geometry.faces[j].normal.y  * -1;
-		//innerWall.geometry.faces[j].normal.z = innerWall.geometry.faces[j].normal.z  * -1;
+		innerWall.geometry.faces[j].normal.z = innerWall.geometry.faces[j].normal.z  * -1;
 	}
 	
 	innerWall.geometry.computeVertexNormals();
@@ -79,7 +78,7 @@ function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, ca
 		
 			topCap.geometry.__dirtyNormals = true;
 			topCap.geometry.computeFaceNormals();
-		
+		    topCap.geometry.computeVertexNormals();
 			tubeObj.add(topCap);		
 		}
 
@@ -103,7 +102,7 @@ function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, ca
 		
 			bottomCap.geometry.__dirtyNormals = true;
 			bottomCap.geometry.computeFaceNormals();
-		
+		    bottomCap.geometry.computeVertexNormals();
 			tubeObj.add(bottomCap);
 		}
 	}
