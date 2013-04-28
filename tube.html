@@ -36,34 +36,33 @@ var ground = true;
 
 function addLights() {
 	// LIGHTS
-	var ambientLight = new THREE.AmbientLight(0x222222);
+	var ambientLight = new THREE.AmbientLight(0x333333);
+	scene.add(ambientLight);
 	
-	var light1 = new THREE.DirectionalLight( 0xffffff, 1.0 );
-	light1.position.set(1,1,0);
+	var light1 = new THREE.DirectionalLight( 0xffffff, 0.9 );
+	light1.position.set(100,100,100);
 	
-	var light2 = new THREE.DirectionalLight( 0xdd0000, 0.5 );
-	//light2.position.set(-100, 0 ,0);
-	light2.position.set(-1, 0 ,0);
+	var light2 = new THREE.DirectionalLight( 0xff0000, 0.7 );
+	light2.position.set(1, 0, 0);
 	
-	//why doesn't a blue light add to the object material color?
-	var light3 = new THREE.DirectionalLight( 0x0000dd, 1.0 );
-	light3.position.set(0, 0, -1);
+	//why doesn't a blue light add to the object blue for those with 00 in blue value?
+	var light3 = new THREE.DirectionalLight( 0x00ff00, 0.7 );
+	light3.position.set(-1, 0, 0);
 	
 	//from the bottom
-	var light4 = new THREE.DirectionalLight( 0x0000dd, 0.5 );
-	light4.position.set(0, -1, 0);
+	var light4 = new THREE.DirectionalLight( 0x00ff, 0.7 );
+	light4.position.set(0, -1, -1);
 	
-	var point1 = new THREE.PointLight(0xff00ff, 1.0);
-	point1.position.set (0, -80, 80)
 	
-	scene.add(ambientLight);
 	scene.add(light1);
 	scene.add(light2);
 	scene.add(light3);
 	scene.add(light4);
-	//scene.add(point1);
+	
+	Coordinates.drawGrid({size: 500});
+	Coordinates.drawAllAxes({axisLength: 100, axisRadius: 1});
+	
 }
-
 
 
 function fillScene() {
@@ -71,17 +70,21 @@ function fillScene() {
 
 	//turn on double side while debugging
 
-	var mat1 = new THREE.MeshLambertMaterial({color: 0xffdd00, side: THREE.FrontSide});
-	var mat2 = new THREE.MeshLambertMaterial({color: 0x00dd00, side: THREE.FrontSide});
-	var mat3 = new THREE.MeshLambertMaterial({color: 0x2222dd, side: THREE.FrontSide});
+	var mat1 = new THREE.MeshPhongMaterial({color: 0xdddd00, side: THREE.FrontSide});
+	var mat2 = new THREE.MeshPhongMaterial({color: 0xdd0055, side: THREE.FrontSide});
+	var mat3 = new THREE.MeshLambertMaterial({color: 0x22eeee, side: THREE.FrontSide});
 
-	console.log("ambient: " + mat1.ambient.r + " " + mat1.ambient.g + " " + mat1.ambient.b);
-	console.log("emissive: " + mat1.emissive.r + " " + mat1.emissive.g + " " + mat1.emissive.b);
+	//console.log("ambient: " + mat1.ambient.r + " " + mat1.ambient.g + " " + mat1.ambient.b);
+	//console.log("emissive: " + mat1.emissive.r + " " + mat1.emissive.g + " " + mat1.emissive.b);
 	
-	var tube1 = new Tube(70, 50, 40, 20, 40, 16, 2, true, true, mat1);
-	var tube2 = new Tube(30, 40, 25, 5, 40, 32, 10, true, true, mat2);
-	var tube3 = new Tube(10, 20, 4, 3, 20, 32, 10, true, true, mat3);
-
+	var tubeG1 = new Tube(70, 50, 40, 20, 40, 16, 2, true);
+	var tubeG2 = new Tube(30, 40, 25, 5, 40, 32, 2, true, true);
+	var tubeG3 = new Tube(10, 20, 4, 3, 20,32, 2);
+	
+	var tube1 = new THREE.Mesh(tubeG1, mat1);
+	var tube2 = new THREE.Mesh(tubeG2, mat2);
+	var tube3 = new THREE.Mesh(tubeG3, mat3);
+	
 	//var badTube1 = new Tube(5, 5, 10, 10, 10, 16, 10, true, true, mat3);
 	//var badTube2 = new Tube(5, 1, 5, 10, 10, 16, 10, true, true, mat3);
 
@@ -118,7 +121,7 @@ function init() {
 	renderer.gammaInput = true;
 	renderer.gammaOutput = true;
 	renderer.setSize(canvasWidth, canvasHeight);
-	renderer.setClearColorHex( 0xAAAAAA, 1.0 );
+	renderer.setClearColor( 0xAAAAAA, 1.0 );
 
 	// CAMERA
 	camera = new THREE.PerspectiveCamera( 38, canvasRatio, 1, 10000 );
@@ -140,24 +143,6 @@ function addToDOM() {
     container.appendChild( renderer.domElement );
 }
 
-function drawHelpers() {
-  if (ground) {
-		Coordinates.drawGround({size:10000});		
-	}
-	if (gridX) {
-		Coordinates.drawGrid({size:10000,scale:0.01});
-	}
-	if (gridY) {
-		Coordinates.drawGrid({size:10000,scale:0.01, orientation:"y"});
-	}
-	if (gridZ) {
-		Coordinates.drawGrid({size:10000,scale:0.01, orientation:"z"});	
-	}
-	if (axes) {
-		Coordinates.drawAllAxes({axisLength:200,axisRadius:1,axisTess:50});
-	}
-}
-
 function animate() {
 	window.requestAnimationFrame(animate);
 	render();
@@ -167,51 +152,16 @@ function render() {
 	var delta = clock.getDelta();
 	cameraControls.update(delta);
 
-	if ( effectController.newGridX !== gridX || effectController.newGridY !== gridY || effectController.newGridZ !== gridZ || effectController.newGround !== ground || effectController.newAxes !== axes)
-	{
-		gridX = effectController.newGridX;
-		gridY = effectController.newGridY;
-		gridZ = effectController.newGridZ;
-		ground = effectController.newGround;
-		axes = effectController.newAxes;
-
-		fillScene();
-	}
-
 	renderer.render(scene, camera);
 }
 
 
 
-function setupGui() {
-
-	effectController = {
-
-		newGridX: gridX,
-		newGridY: gridY,
-		newGridZ: gridZ,
-		newGround: ground,
-		newAxes: axes
-
-	};
-
-	var gui = new dat.GUI();
-	var h = gui.addFolder("Grid display");
-	h.add( effectController, "newGridX").name("Show XZ grid");
-	h.add( effectController, "newGridY" ).name("Show YZ grid");
-	h.add( effectController, "newGridZ" ).name("Show XY grid");
-	h.add( effectController, "newGround" ).name("Show ground");
-	h.add( effectController, "newAxes" ).name("Show axes");
-
-}
-
 
 // this is the main action sequence
 init();
 fillScene();
-drawHelpers();
 addToDOM();
-setupGui();
 animate();
 
 

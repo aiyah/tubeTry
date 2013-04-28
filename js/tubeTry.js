@@ -1,61 +1,67 @@
 
 
-function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, capTop, capBottom, material) {
+function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, capTop, capBottom) {
 
 	this.rTop = rTop;
 	this.rBottom = rBottom;
-	this.height = height;
-	this.rSegments = rSegments;
-	this.hSegments = hSegments;
 	this.rTopIn = rTopIn;
 	this.rBottomIn = rBottomIn;
+	this.height = height;
 	
-	var tubeObj = new THREE.Object3D();
-	var outerWallGeo = new THREE.CylinderGeometry(rTop, rBottom, height, rSegments, hSegments, true);
-	var innerWallGeo = new THREE.CylinderGeometry(rTopIn, rBottomIn, height, rSegments, hSegments, true);
-
-	var outerWall = new THREE.Mesh(outerWallGeo, material);
-	var innerWall = new THREE.Mesh(innerWallGeo, material);
-
+	//set defaults for optional arguments
+	this.rSegments = rSegments === undefined ? 32 : rSegments;
+	this.hSegments = hSegments === undefined ? 2 : hSegments;
+	this.capTop = (capTop === undefined) ? true : capTop;
+	this.capBottom = (capBottom === undefined) ? true : capBottom;
+ 
+	var tubeGeo = new THREE.CylinderGeometry(rTop, rBottom, height, this.rSegments, this.hSegments, true);
+	
 	if (rTop <= rTopIn || rBottom <= rBottomIn) {
 		var msg = "Please check that the outer radius is greater than inner radius";
 		console.error(msg);
 		return null;
 	}	
-	
-	//innerWall.geometry.dynamic = true;
-	//innerWall.geometry.__dirtyVertices = true;
-	//innerWall.geometry.__dirtyNormals = true;
-	
-	
-	//scale x or z not y since can have diff inner radius for top and bottom
-	innerWall.scale.x = -1;
-	
-
-	//so that inner wall is lit correctly
-	//if the normal for y is negated it looks a little too bright
-	for (var j = 0 ; j < innerWall.geometry.faces.length; j++) {
-		innerWall.geometry.faces[j].normal.x = innerWall.geometry.faces[j].normal.x  * -1;
-		//innerWall.geometry.faces[j].normal.y = innerWall.geometry.faces[j].normal.y  * -1;
-		innerWall.geometry.faces[j].normal.z = innerWall.geometry.faces[j].normal.z  * -1;
-	}
-	
-	innerWall.geometry.computeVertexNormals();
-	//don't compute face normals, else yellow and blue inner wall light not correctly
-	
 	var yTop = height / 2;
-
+	
+	//do inner wall
+	var inWallGeo = new THREE.CylinderGeometry(rTopIn, rBottomIn, height, this.rSegments, this.hSegments, true);
+	var vertTotal = inWallGeo.vertices.length;
+	
+	//console.log("inWallGeo vert:" + inWallGeo.vertices.length);
+	//console.log("inWallGeo faces:" + inWallGeo.faces.length);
+	//console.log("inWallGeo normals:" + inWallGeo.normals.length);
+	
+	inWallGeo.dynamic = true;
+	
+	for (var i=0;i < inWallGeo.vertices.length; i++) {
+		inWallGeo.vertices[i].x *= -1;
+	}
+		
+	for (var i = 0; i < inWallGeo.faces.length; i++) {
+		//console.log(i + " normal (x,y,z)" + inWallGeo.faces[i].normal.x +", " + inWallGeo.faces[i].normal.y + ", "+ inWallGeo.faces[i].normal.z);
+		inWallGeo.faces[i].normal.x *= -1;
+		//inWallGeo.faces[i].normal.y *= -1;	//comment this out, else too bright
+		inWallGeo.faces[i].normal.z *= -1;		
+		//console.log(i + " normal after(x,y,z)" + inWallGeo.faces[i].normal.x +", " + inWallGeo.faces[i].normal.y + ", "+ inWallGeo.faces[i].normal.z);
+	};	
+	
+	inWallGeo.computeFaceNormals();
+	inWallGeo.computeVertexNormals();
+	
+	THREE.GeometryUtils.merge(tubeGeo, inWallGeo);
+		
 	//make the top and bottom caps
 	
-	for (var i = 0; i < rSegments && (capTop || capBottom) ; i++) {
+	for (var i = 0; i < this.rSegments && (this.capTop || this.capBottom) ; i++) {
 		var topCapGeo = new THREE.Geometry();
-
+		var bottomCapGeo = new THREE.Geometry();
+		
 		//console.log(i + " of "  + rSegments);
 
-		var theta = i * 2 * Math.PI / rSegments;	
-		var thetaNext = (i+1) * 2 * Math.PI / rSegments;	
+		var theta = i * 2 * Math.PI / this.rSegments;	
+		var thetaNext = (i+1) * 2 * Math.PI / this.rSegments;	
 
-		if (capTop) {	
+		if (this.capTop) {	
 			//topCap
 			var outerPtPrev = new THREE.Vector3(rTop * Math.cos(theta), yTop, rTop * Math.sin(theta));
 			var innerPtPrev = new THREE.Vector3(rTopIn * Math.cos(theta), yTop, rTopIn * Math.sin(theta));	
@@ -74,16 +80,12 @@ function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, ca
 			topCapGeo.vertices.push(innerPt);
 			
 			topCapGeo.faces.push(new THREE.Face4(3,2,1,0));		
-			var topCap = new THREE.Mesh(topCapGeo, material);	
-		
-			topCap.geometry.__dirtyNormals = true;
-			topCap.geometry.computeFaceNormals();
-		    topCap.geometry.computeVertexNormals();
-			tubeObj.add(topCap);		
+			topCapGeo.computeFaceNormals();
+			THREE.GeometryUtils.merge(tubeGeo, topCapGeo);
 		}
 
 
-		if (capBottom) {
+		if (this.capBottom) {
 			
 			//bottom cap
 			outerPtPrev = new THREE.Vector3(rBottom * Math.cos(theta), -yTop, rBottom * Math.sin(theta));
@@ -91,26 +93,21 @@ function Tube(rTop, rBottom, rTopIn, rBottomIn, height, rSegments, hSegments, ca
 			outerPt = new THREE.Vector3(rBottom * Math.cos(thetaNext), -yTop, rBottom * Math.sin(thetaNext));
 			innerPt = new THREE.Vector3(rBottomIn * Math.cos(thetaNext), -yTop, rBottomIn * Math.sin(thetaNext));
 			
-			var bottomCapGeo = new THREE.Geometry();
+		
 			bottomCapGeo.vertices.push(innerPtPrev);
 			bottomCapGeo.vertices.push(outerPtPrev);
 			bottomCapGeo.vertices.push(outerPt);
 			bottomCapGeo.vertices.push(innerPt);		
 		
 			bottomCapGeo.faces.push(new THREE.Face4(0,1,2,3));
-			var bottomCap = new THREE.Mesh(bottomCapGeo, material);
-		
-			bottomCap.geometry.__dirtyNormals = true;
-			bottomCap.geometry.computeFaceNormals();
-		    bottomCap.geometry.computeVertexNormals();
-			tubeObj.add(bottomCap);
+			bottomCapGeo.computeFaceNormals();
+			THREE.GeometryUtils.merge(tubeGeo, bottomCapGeo);
+	
 		}
 	}
 
 
-	tubeObj.add(outerWall);
-	tubeObj.add(innerWall);
 	
-	return tubeObj;
+	return tubeGeo;
 }
 
