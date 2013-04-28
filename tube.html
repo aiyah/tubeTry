@@ -43,15 +43,14 @@ function addLights() {
 	light1.position.set(100,100,100);
 	
 	var light2 = new THREE.DirectionalLight( 0xff0000, 0.7 );
-	light2.position.set(1, 0, 0);
+	light2.position.set(1, 0, -1);
 	
 	//why doesn't a blue light add to the object blue for those with 00 in blue value?
 	var light3 = new THREE.DirectionalLight( 0x00ff00, 0.7 );
 	light3.position.set(-1, 0, 0);
 	
-	//from the bottom
-	var light4 = new THREE.DirectionalLight( 0x00ff, 0.7 );
-	light4.position.set(0, -1, -1);
+	var light4 = new THREE.DirectionalLight( 0x0000ff, 0.7 );
+	light4.position.set(0, -1, 0);
 	
 	
 	scene.add(light1);
@@ -77,9 +76,9 @@ function fillScene() {
 	//console.log("ambient: " + mat1.ambient.r + " " + mat1.ambient.g + " " + mat1.ambient.b);
 	//console.log("emissive: " + mat1.emissive.r + " " + mat1.emissive.g + " " + mat1.emissive.b);
 	
-	var tubeG1 = new Tube(70, 50, 40, 20, 40, 16, 2, true);
+	var tubeG1 = new Tube(70, 50, 40, 20, 40, 32, 2, true, true);
 	var tubeG2 = new Tube(30, 40, 25, 5, 40, 32, 2, true, true);
-	var tubeG3 = new Tube(10, 20, 4, 3, 20,32, 2);
+	var tubeG3 = new Tube(10, 20, 4, 3, 20, 16, 2);
 	
 	var tube1 = new THREE.Mesh(tubeG1, mat1);
 	var tube2 = new THREE.Mesh(tubeG2, mat2);
